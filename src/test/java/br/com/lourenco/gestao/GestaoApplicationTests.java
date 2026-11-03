@@ -1,4 +1,4 @@
-package gestao_comercio;
+package br.com.lourenco.gestao;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
