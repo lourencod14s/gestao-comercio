@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: gestao-comercio
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/gestao}
+    username: ${DB_USER:gestao}
+    password: ${DB_PASSWORD:gestao123}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false

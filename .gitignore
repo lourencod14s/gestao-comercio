@@ -31,3 +31,9 @@ application-local.yml
 .idea/
 *.iml
 .vscode/
+
+printf '\n# Maven\ntarget/\nHELP.md\n' >> .gitignore
+
+# Maven
+target/
+HELP.md
