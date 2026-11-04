@@ -11,14 +11,17 @@ import br.com.lourenco.gestao.dto.CategoriaResponse;
 import br.com.lourenco.gestao.exception.RecursoNaoEncontradoException;
 import br.com.lourenco.gestao.exception.RegraNegocioException;
 import br.com.lourenco.gestao.repository.CategoriaRepository;
+import br.com.lourenco.gestao.repository.ProdutoRepository;
 
 @Service
 public class CategoriaService {
 
     private final CategoriaRepository repository;
+    private final ProdutoRepository produtoRepository;
 
-    public CategoriaService(CategoriaRepository repository) {
+    public CategoriaService(CategoriaRepository repository, ProdutoRepository produtoRepository) {
         this.repository = repository;
+        this.produtoRepository = produtoRepository;
     }
 
     @Transactional(readOnly = true)
@@ -59,9 +62,15 @@ public class CategoriaService {
         return CategoriaResponse.de(repository.save(categoria));
     }
 
-    @Transactional
+        @Transactional
     public void excluir(Long id) {
         Categoria categoria = buscarEntidade(id);
+
+        if (produtoRepository.existsByCategoriaId(id)) {
+            throw new RegraNegocioException(
+                    "Não é possível excluir a categoria: existem produtos vinculados a ela");
+        }
+
         repository.delete(categoria);
     }
 
