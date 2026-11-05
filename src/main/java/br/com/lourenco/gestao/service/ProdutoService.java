@@ -15,6 +15,12 @@ import br.com.lourenco.gestao.exception.RegraNegocioException;
 import br.com.lourenco.gestao.repository.CategoriaRepository;
 import br.com.lourenco.gestao.repository.FornecedorRepository;
 import br.com.lourenco.gestao.repository.ProdutoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
+import br.com.lourenco.gestao.dto.PaginaResponse;
+import br.com.lourenco.gestao.repository.ProdutoSpecs;
 
 @Service
 public class ProdutoService {
@@ -22,6 +28,10 @@ public class ProdutoService {
     private final ProdutoRepository produtoRepository;
     private final CategoriaRepository categoriaRepository;
     private final FornecedorRepository fornecedorRepository;
+
+    private static final List<String> CAMPOS_ORDENAVEIS = List.of(
+        "id", "nome", "sku", "precoCusto", "precoVenda",
+        "estoqueAtual", "estoqueMinimo", "criadoEm");
 
     public ProdutoService(ProdutoRepository produtoRepository,
                           CategoriaRepository categoriaRepository,
@@ -32,10 +42,35 @@ public class ProdutoService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProdutoResponse> listar() {
-        return produtoRepository.findByAtivoTrue().stream()
-                .map(ProdutoResponse::de)
-                .toList();
+    public PaginaResponse<ProdutoResponse> listar(String nome, Long categoriaId,
+                                                  boolean somenteEstoqueBaixo,
+                                                  Pageable pageable) {
+        validarOrdenacao(pageable);
+
+        Specification<Produto> spec = ProdutoSpecs.ativo();
+
+        if (nome != null && !nome.isBlank()) {
+            spec = spec.and(ProdutoSpecs.nomeContem(nome.trim()));
+        }
+        if (categoriaId != null) {
+            spec = spec.and(ProdutoSpecs.daCategoria(categoriaId));
+        }
+        if (somenteEstoqueBaixo) {
+            spec = spec.and(ProdutoSpecs.estoqueBaixo());
+        }
+
+        Page<ProdutoResponse> pagina = produtoRepository.findAll(spec, pageable)
+                .map(ProdutoResponse::de);
+        return PaginaResponse.de(pagina);
+    }
+
+    private void validarOrdenacao(Pageable pageable) {
+        pageable.getSort().forEach(ordem -> {
+            if (!CAMPOS_ORDENAVEIS.contains(ordem.getProperty())) {
+                throw new RegraNegocioException("Campo de ordenação inválido: '"
+                     + ordem.getProperty() + "'. Use um destes: " + CAMPOS_ORDENAVEIS);
+            }
+        });
     }
 
     @Transactional(readOnly = true)

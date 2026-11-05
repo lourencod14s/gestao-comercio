@@ -1,7 +1,6 @@
 package br.com.lourenco.gestao.controller;
 
 import java.net.URI;
-import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +18,12 @@ import br.com.lourenco.gestao.dto.ProdutoResponse;
 import br.com.lourenco.gestao.service.ProdutoService;
 import jakarta.validation.Valid;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import br.com.lourenco.gestao.dto.PaginaResponse;
+
 @RestController
 @RequestMapping("/produtos")
 public class ProdutoController {
@@ -30,8 +35,12 @@ public class ProdutoController {
     }
 
     @GetMapping
-    public List<ProdutoResponse> listar() {
-        return service.listar();
+    public PaginaResponse<ProdutoResponse> listar(
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) Long categoriaId,
+            @RequestParam(defaultValue = "false") boolean estoqueBaixo,
+            @PageableDefault(size = 20, sort = "nome") Pageable pageable) {
+        return service.listar(nome, categoriaId, estoqueBaixo, pageable);
     }
 
     @GetMapping("/{id}")
